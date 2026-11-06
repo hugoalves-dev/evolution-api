@@ -1,0 +1,17 @@
+name: Baileys status ACK patch
+on:
+  push:
+    branches:
+      - fix/baileys-status-ack
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  verify-baileys-patch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build patched Evolution builder image
+        run: docker build --target builder -t evolution-baileys-ack:test .
