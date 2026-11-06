@@ -1,3 +1,15 @@
+> [!IMPORTANT]
+> **Evolution API Reliability Fork** (unofficial, maintained by [hugoalves-dev](https://github.com/hugoalves-dev)).
+> Focused fixes for WhatsApp message delivery and RabbitMQ publisher reliability in Evolution API 2.3.7.
+>
+> - **Baileys Status ACK:** backports the top-level `<status>` acknowledgment and offline-queue handling from [Baileys PR #2883](https://github.com/WhiskeySockets/Baileys/pull/2883), preventing a known cause of repeated `stream errored out (ack class=status)` reconnections.
+> - **RabbitMQ Publisher Confirms:** uses confirm channels, persistent messages and broker acknowledgment callbacks for both per-instance and global publishing. Rejects NACKs instead of treating the client-side `publish()` return value as a delivery confirmation.
+> - **Docker images:** the fork's `main` branch publishes multi-architecture images to GitHub Container Registry (GHCR), using the repository name as the image name.
+>
+> Broker confirms acknowledge accepted publishes, but do **not** provide exactly-once or end-to-end delivery guarantees. Retries may duplicate messages, so consumers must handle duplicates. These patches are validated by CI, but do not replace real WhatsApp session and RabbitMQ failure testing. This repository is not affiliated with or endorsed by the Evolution Foundation.
+
+---
+
 <p align="center">
   <a href="https://evolutionfoundation.com.br">
     <img src="./public/hover-evolution.png" alt="Evolution Foundation" />
