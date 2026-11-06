@@ -4,9 +4,8 @@ import { configService, Log, Rabbitmq } from '@config/env.config';
 import { Logger } from '@config/logger.config';
 import * as amqp from 'amqplib/callback_api';
 
-import { publishConfirmed } from './publish-confirmed';
-
 import { EmitData, EventController, EventControllerInterface } from '../event.controller';
+import { publishConfirmed } from './publish-confirmed';
 
 export class RabbitmqController extends EventController implements EventControllerInterface {
   public amqpChannel: amqp.ConfirmChannel | null = null;
