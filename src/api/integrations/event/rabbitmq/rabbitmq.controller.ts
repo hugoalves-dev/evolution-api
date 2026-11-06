@@ -4,10 +4,12 @@ import { configService, Log, Rabbitmq } from '@config/env.config';
 import { Logger } from '@config/logger.config';
 import * as amqp from 'amqplib/callback_api';
 
+import { publishConfirmed } from './publish-confirmed';
+
 import { EmitData, EventController, EventControllerInterface } from '../event.controller';
 
 export class RabbitmqController extends EventController implements EventControllerInterface {
-  public amqpChannel: amqp.Channel | null = null;
+  public amqpChannel: amqp.ConfirmChannel | null = null;
   private amqpConnection: amqp.Connection | null = null;
   private readonly logger = new Logger('RabbitmqController');
   private reconnectAttempts = 0;
@@ -71,7 +73,7 @@ export class RabbitmqController extends EventController implements EventControll
           this.handleConnectionLoss();
         });
 
-        connection.createChannel((channelError: Error, channel: amqp.Channel) => {
+        connection.createConfirmChannel((channelError: Error, channel: amqp.ConfirmChannel) => {
           if (channelError) {
             this.logger.error({
               local: 'RabbitmqController.createChannel',
@@ -180,11 +182,11 @@ export class RabbitmqController extends EventController implements EventControll
     }, delay);
   }
 
-  private set channel(channel: amqp.Channel) {
+  private set channel(channel: amqp.ConfirmChannel) {
     this.amqpChannel = channel;
   }
 
-  public get channel(): amqp.Channel {
+  public get channel(): amqp.ConfirmChannel {
     return this.amqpChannel;
   }
 
@@ -221,7 +223,7 @@ export class RabbitmqController extends EventController implements EventControll
 
     if (!(await this.ensureConnection())) {
       this.logger.warn(`Failed to emit event ${event} for instance ${instanceName}: No AMQP connection`);
-      return;
+      throw new Error('RabbitMQ confirm channel unavailable');
     }
 
     const instanceRabbitmq = await this.get(instanceName);
@@ -271,7 +273,7 @@ export class RabbitmqController extends EventController implements EventControll
 
             await this.amqpChannel.bindQueue(queueName, exchangeName, eventName);
 
-            await this.amqpChannel.publish(exchangeName, event, Buffer.from(JSON.stringify(message)));
+            await publishConfirmed(this.amqpChannel, exchangeName, event, Buffer.from(JSON.stringify(message)));
 
             if (logEnabled) {
               const logData = {
@@ -292,6 +294,7 @@ export class RabbitmqController extends EventController implements EventControll
             retry++;
             if (retry >= 3) {
               this.handleConnectionLoss();
+              throw error;
             }
           }
         }
@@ -324,7 +327,7 @@ export class RabbitmqController extends EventController implements EventControll
 
           await this.amqpChannel.bindQueue(queueName, exchangeName, event);
 
-          await this.amqpChannel.publish(exchangeName, event, Buffer.from(JSON.stringify(message)));
+          await publishConfirmed(this.amqpChannel, exchangeName, event, Buffer.from(JSON.stringify(message)));
 
           if (logEnabled) {
             const logData = {
@@ -345,6 +348,7 @@ export class RabbitmqController extends EventController implements EventControll
           retry++;
           if (retry >= 3) {
             this.handleConnectionLoss();
+            throw error;
           }
         }
       }
