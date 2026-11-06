@@ -15,6 +15,12 @@ COPY ./tsup.config.ts ./
 
 RUN npm ci --silent
 
+# Keep Baileys pinned. Patch its compiled module during image build, before tsup.
+COPY ./patches ./patches
+RUN node --test ./patches/baileys-status-ack.test.cjs \
+    && node ./patches/apply-baileys-status-ack.cjs \
+    && node --check ./node_modules/baileys/lib/Socket/messages-recv.js
+
 COPY ./src ./src
 COPY ./public ./public
 COPY ./prisma ./prisma
