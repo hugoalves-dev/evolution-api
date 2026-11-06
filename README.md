@@ -97,8 +97,8 @@ Evolution API integrates natively with many platforms:
 ### Installation
 
 ```bash
-git clone git@github.com:evolution-foundation/evolution-api.git
-cd evolution-api
+git clone https://github.com/hugoalves-dev/evolution-api-reliability.git
+cd evolution-api-reliability
 
 # Install dependencies
 npm install
@@ -135,8 +135,8 @@ npm run start:prod
 ### Docker
 
 ```bash
-docker pull evoapicloud/evolution-api:latest
-docker run -p 8080:8080 --env-file .env evoapicloud/evolution-api:latest
+docker pull ghcr.io/hugoalves-dev/evolution-api-reliability:latest
+docker run -p 8080:8080 --env-file .env ghcr.io/hugoalves-dev/evolution-api-reliability:latest
 ```
 
 ---
@@ -180,7 +180,8 @@ Local storage or S3/MinIO. Automatic media download from WhatsApp. Optional audi
 | Website | [evolutionfoundation.com.br](https://evolutionfoundation.com.br) |
 | Documentation | [docs.evolutionfoundation.com.br](https://docs.evolutionfoundation.com.br) |
 | Community | [evolutionfoundation.com.br/community](https://evolutionfoundation.com.br/community) |
-| Docker Hub | [evoapicloud/evolution-api](https://hub.docker.com/r/evoapicloud/evolution-api) |
+| GHCR (this fork) | [evolution-api-reliability](https://github.com/hugoalves-dev/evolution-api-reliability/pkgs/container/evolution-api-reliability) |
+| Docker Hub (upstream) | [evoapicloud/evolution-api](https://hub.docker.com/r/evoapicloud/evolution-api) |
 | Changelog | [CHANGELOG.md](./CHANGELOG.md) |
 | Contributing | [CONTRIBUTING.md](./CONTRIBUTING.md) |
 | Security | [SECURITY.md](./SECURITY.md) |
