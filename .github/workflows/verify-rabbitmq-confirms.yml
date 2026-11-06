@@ -1,0 +1,39 @@
+name: Verify RabbitMQ Publisher Confirms
+
+on:
+  push:
+    branches:
+      - fix/rabbitmq-publisher-confirms
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-confirm-publisher:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test broker confirm behavior
+        run: npx tsx --test test/rabbitmq-publish-confirmed.test.ts
+
+      - name: Generate Prisma client
+        env:
+          DATABASE_PROVIDER: postgresql
+        run: npm run db:generate
+
+      - name: Build
+        run: npm run build
