@@ -1,15 +1,3 @@
-> [!IMPORTANT]
-> **Evolution API Reliability Fork** (unofficial, maintained by [hugoalves-dev](https://github.com/hugoalves-dev)).
-> Focused fixes for WhatsApp message delivery and RabbitMQ publisher reliability in Evolution API 2.3.7.
->
-> - **Baileys Status ACK:** backports the top-level `<status>` acknowledgment and offline-queue handling from [Baileys PR #2883](https://github.com/WhiskeySockets/Baileys/pull/2883), preventing a known cause of repeated `stream errored out (ack class=status)` reconnections.
-> - **RabbitMQ Publisher Confirms:** uses confirm channels, persistent messages and broker acknowledgment callbacks for both per-instance and global publishing. Rejects NACKs instead of treating the client-side `publish()` return value as a delivery confirmation.
-> - **Docker images:** the fork's `main` branch publishes multi-architecture images to GitHub Container Registry (GHCR), using the repository name as the image name.
->
-> Broker confirms acknowledge accepted publishes, but do **not** provide exactly-once or end-to-end delivery guarantees. Retries may duplicate messages, so consumers must handle duplicates. These patches are validated by CI, but do not replace real WhatsApp session and RabbitMQ failure testing. This repository is not affiliated with or endorsed by the Evolution Foundation.
-
----
-
 <p align="center">
   <a href="https://www.buymeacoffee.com/vitorhugo1207">
     <img src="https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20coffee&emoji=&slug=vitorhugo1207&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" alt="Buy me a coffee" />
@@ -22,10 +10,10 @@
   </a>
 </p>
 
-<h1 align="center">Evolution API</h1>
+<h1 align="center">Evolution API Reliability</h1>
 
 <p align="center">
-  Open-source REST API for WhatsApp and multi-channel messaging — part of the Evolution Foundation ecosystem.
+  Unofficial Evolution API 2.3.7 fork with Baileys Status ACK and RabbitMQ publisher-confirm fixes.
 </p>
 
 <p align="center">
@@ -33,7 +21,7 @@
   <a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License: Apache 2.0" /></a>
   <a href="https://docs.evolutionfoundation.com.br"><img src="https://img.shields.io/badge/Docs-evolutionfoundation.com.br-00ffa7" alt="Documentation" /></a>
   <a href="https://evolutionfoundation.com.br/community"><img src="https://img.shields.io/badge/Community-Join%20us-white" alt="Community" /></a>
-  <a href="https://hub.docker.com/r/evoapicloud/evolution-api"><img src="https://img.shields.io/badge/Docker-evoapicloud-blue" alt="Docker image" /></a>
+  <a href="https://github.com/hugoalves-dev/evolution-api-reliability/pkgs/container/evolution-api-reliability"><img src="https://img.shields.io/badge/GHCR-evolution--api--reliability-blue?logo=github" alt="Fork container image" /></a>
 </p>
 
 <p align="center">
