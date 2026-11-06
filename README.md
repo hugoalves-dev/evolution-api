@@ -11,6 +11,12 @@
 ---
 
 <p align="center">
+  <a href="https://www.buymeacoffee.com/vitorhugo1207">
+    <img src="https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20coffee&emoji=&slug=vitorhugo1207&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" alt="Buy me a coffee" />
+  </a>
+</p>
+
+<p align="center">
   <a href="https://evolutionfoundation.com.br">
     <img src="./public/hover-evolution.png" alt="Evolution Foundation" />
   </a>
@@ -36,6 +42,17 @@
   <a href="https://evolutionfoundation.com.br/community">Community</a> &middot;
   <a href="mailto:suporte@evofoundation.com.br">Support</a>
 </p>
+
+---
+
+## Why this fork?
+
+Unofficial fork of [Evolution API 2.3.7](https://github.com/evolution-foundation/evolution-api) addressing two reliability issues:
+
+- **WhatsApp/Baileys:** backports the handling of top-level Status ACKs, including offline events, to prevent recurring stream errors and delayed messages. Adapted from [Baileys PR #2883](https://github.com/WhiskeySockets/Baileys/pull/2883) ([our PR #1](https://github.com/hugoalves-dev/evolution-api-reliability/pull/1)).
+- **RabbitMQ:** adds broker-confirmed and persistent publishing through ConfirmChannel. Independently implemented with [Evolution PR #1901](https://github.com/evolution-foundation/evolution-api/pull/1901) as reference, not cherry-picked ([our PR #2](https://github.com/hugoalves-dev/evolution-api-reliability/pull/2)).
+
+Images: `ghcr.io/hugoalves-dev/evolution-api-reliability:latest`. Publisher confirms do not guarantee exactly-once delivery. This fork is not endorsed by the Evolution Foundation.
 
 ---
 
