@@ -49,30 +49,36 @@ export function publishConfirmed(
   routingKey: string,
   content: Buffer,
   messageId?: string,
+  confirmTimeoutMs = 10_000,
 ): Promise<void> {
   return new Promise<void>((resolve, reject) => {
+    if (!Number.isFinite(confirmTimeoutMs) || confirmTimeoutMs <= 0) {
+      reject(new RangeError('RabbitMQ confirm timeout must be positive'));
+      return;
+    }
     const correlationId = randomUUID();
     const tracked = trackReturn(channel, correlationId);
+    let settled = false;
+    const finish = (error?: unknown) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      tracked.cleanup();
+      if (error) reject(error);
+      else if (tracked.returned) reject(new Error('RabbitMQ publication was unroutable'));
+      else resolve();
+    };
+    const timer = setTimeout(() => finish(new Error('RabbitMQ publisher confirmation timed out')), confirmTimeoutMs);
     try {
       channel.publish(
         exchange,
         routingKey,
         content,
         { persistent: true, mandatory: true, correlationId, ...(messageId ? { messageId } : {}) },
-        (error) => {
-          tracked.cleanup();
-          if (error) {
-            reject(error);
-          } else if (tracked.returned) {
-            reject(new Error('RabbitMQ publication was unroutable'));
-          } else {
-            resolve();
-          }
-        },
+        (error) => finish(error),
       );
     } catch (error) {
-      tracked.cleanup();
-      reject(error);
+      finish(error ?? new Error('RabbitMQ publish failed'));
     }
   });
 }

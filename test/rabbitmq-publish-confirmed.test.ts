@@ -104,3 +104,32 @@ test('preserves the producer event identity in messageId across publication retr
   captured.ack?.(null);
   await retry;
 });
+
+test('rejects a missing confirmation after the deadline and removes its return listener', async () => {
+  const captured: { ack?: Ack } = {};
+  const channel = channelWithCallback(captured);
+  await Promise.race([
+    assert.rejects(publishConfirmed(channel, 'exchange', 'key', Buffer.from('test'), 'id', 20), /timed out/i),
+    new Promise((_, reject) => setTimeout(() => reject(new Error('confirmation did not settle')), 200)),
+  ]);
+  assert.equal(channel.listenerCount('return'), 0);
+  captured.ack?.(null);
+});
+
+test('a late confirmation cannot remove a newer publication return listener', async () => {
+  const captured: { ack?: Ack; options?: object } = {};
+  const channel = channelWithCallback(captured);
+  await Promise.race([
+    assert.rejects(publishConfirmed(channel, 'exchange', 'key', Buffer.from('first'), 'first', 20), /timed out/i),
+    new Promise((_, reject) => setTimeout(() => reject(new Error('confirmation did not settle')), 200)),
+  ]);
+  const lateAck = captured.ack;
+  const next = publishConfirmed(channel, 'exchange', 'key', Buffer.from('next'), 'next', 1000);
+  const nextAck = captured.ack;
+  const correlationId = (captured.options as { correlationId: string }).correlationId;
+  lateAck?.(null);
+  channel.emit('return', { properties: { correlationId } });
+  nextAck?.(null);
+  await assert.rejects(next, /unroutable/i);
+  assert.equal(channel.listenerCount('return'), 0);
+});
