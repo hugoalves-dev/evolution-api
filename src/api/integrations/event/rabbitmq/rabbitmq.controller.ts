@@ -5,6 +5,7 @@ import { Logger } from '@config/logger.config';
 import * as amqp from 'amqplib/callback_api';
 
 import { EmitData, EventController, EventControllerInterface } from '../event.controller';
+import { ensureTopology } from './ensure-topology';
 import { eventIdFor } from './event-id';
 import { publishConfirmed } from './publish-confirmed';
 import { rabbitEventEnvelope } from './rabbit-event-envelope';
@@ -248,24 +249,9 @@ export class RabbitmqController extends EventController implements EventControll
 
         while (retry < 3) {
           try {
-            await this.amqpChannel.assertExchange(exchangeName, 'topic', {
-              durable: true,
-              autoDelete: false,
-            });
-
             const eventName = event.replace(/_/g, '.').toLowerCase();
-
             const queueName = `${instanceName}.${eventName}`;
-
-            await this.amqpChannel.assertQueue(queueName, {
-              durable: true,
-              autoDelete: false,
-              arguments: {
-                'x-queue-type': 'quorum',
-              },
-            });
-
-            await this.amqpChannel.bindQueue(queueName, exchangeName, eventName);
+            await ensureTopology(this.amqpChannel, exchangeName, queueName, event);
 
             await publishConfirmed(
               this.amqpChannel,
@@ -308,24 +294,10 @@ export class RabbitmqController extends EventController implements EventControll
 
       while (retry < 3) {
         try {
-          await this.amqpChannel.assertExchange(exchangeName, 'topic', {
-            durable: true,
-            autoDelete: false,
-          });
-
           const queueName = prefixKey
             ? `${prefixKey}.${event.replace(/_/g, '.').toLowerCase()}`
             : event.replace(/_/g, '.').toLowerCase();
-
-          await this.amqpChannel.assertQueue(queueName, {
-            durable: true,
-            autoDelete: false,
-            arguments: {
-              'x-queue-type': 'quorum',
-            },
-          });
-
-          await this.amqpChannel.bindQueue(queueName, exchangeName, event);
+          await ensureTopology(this.amqpChannel, exchangeName, queueName, event);
 
           await publishConfirmed(this.amqpChannel, exchangeName, event, Buffer.from(JSON.stringify(message)), eventId);
 
@@ -384,20 +356,8 @@ export class RabbitmqController extends EventController implements EventControll
             : `${event.replace(/_/g, '.').toLowerCase()}`;
         const exchangeName = rabbitmqExchangeName;
 
-        await this.amqpChannel.assertExchange(exchangeName, 'topic', {
-          durable: true,
-          autoDelete: false,
-        });
-
-        await this.amqpChannel.assertQueue(queueName, {
-          durable: true,
-          autoDelete: false,
-          arguments: {
-            'x-queue-type': 'quorum',
-          },
-        });
-
-        await this.amqpChannel.bindQueue(queueName, exchangeName, event);
+        const route = event.replace(/_/g, '.').toLowerCase();
+        await ensureTopology(this.amqpChannel, exchangeName, queueName, route);
 
         this.logger.info(`Global queue initialized: ${queueName}`);
       } catch (error) {
