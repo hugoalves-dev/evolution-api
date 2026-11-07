@@ -2,7 +2,7 @@
 
 RabbitMQ publication uses persistent messages, a confirm channel and mandatory routing. A broker return is associated with the individual publish using a separate correlation ID; a positive confirm after a return is treated as a failed publication. A confirm timeout or connection loss remains ambiguous and can lead to a duplicate on retry.
 
-For `messages.upsert` events with a nonempty `data.key.id`, the AMQP `messageId` is that WhatsApp message ID. Other observations receive a random ID generated once for each `emit` call and reused by local/global publication attempts and in-process retries. Distinct contact and connection observations are not collapsed. These generated identities are not preserved across producer process crashes or recreated upstream emissions.
+For `messages.upsert` events with a nonempty `data.key.id`, the AMQP `messageId` is that WhatsApp message ID (or its SHA-256 digest when its UTF-8 encoding exceeds 255 bytes). Other observations receive a random ID generated once for each `emit` call and reused by local/global publication attempts and in-process retries. Distinct contact and connection observations are not collapsed. These generated identities are not preserved across producer process crashes or recreated upstream emissions.
 
 The top-level `apikey` field is no longer published in the RabbitMQ envelope or RabbitMQ event logs, including an `apikey` supplied via `extra`. RabbitMQ consumers relying on that field must obtain credentials through their own configuration instead. Event data and other fields can contain sensitive information; this change does not sanitize arbitrary event payloads or authorize logging them.
 
