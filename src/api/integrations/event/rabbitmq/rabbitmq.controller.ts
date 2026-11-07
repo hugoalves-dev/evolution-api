@@ -5,7 +5,9 @@ import { Logger } from '@config/logger.config';
 import * as amqp from 'amqplib/callback_api';
 
 import { EmitData, EventController, EventControllerInterface } from '../event.controller';
+import { eventIdFor } from './event-id';
 import { publishConfirmed } from './publish-confirmed';
+import { rabbitEventEnvelope } from './rabbit-event-envelope';
 
 export class RabbitmqController extends EventController implements EventControllerInterface {
   public amqpChannel: amqp.ConfirmChannel | null = null;
@@ -234,16 +236,9 @@ export class RabbitmqController extends EventController implements EventControll
     const we = event.replace(/[.-]/gm, '_').toUpperCase();
     const logEnabled = configService.get<Log>('LOG').LEVEL.includes('WEBHOOKS');
 
-    const message = {
-      ...(extra ?? {}),
-      event,
-      instance: instanceName,
-      data,
-      server_url: serverUrl,
-      date_time: dateTime,
-      sender,
-      apikey: apiKey,
-    };
+    // One identity per event, reused by every local/global publication attempt.
+    const eventId = eventIdFor(event, data);
+    const message = rabbitEventEnvelope({ instanceName, event, data, serverUrl, dateTime, sender, apiKey, extra });
 
     if (instanceRabbitmq?.enabled && this.amqpChannel) {
       if (Array.isArray(rabbitmqLocal) && rabbitmqLocal.includes(we)) {
@@ -272,7 +267,13 @@ export class RabbitmqController extends EventController implements EventControll
 
             await this.amqpChannel.bindQueue(queueName, exchangeName, eventName);
 
-            await publishConfirmed(this.amqpChannel, exchangeName, event, Buffer.from(JSON.stringify(message)));
+            await publishConfirmed(
+              this.amqpChannel,
+              exchangeName,
+              event,
+              Buffer.from(JSON.stringify(message)),
+              eventId,
+            );
 
             if (logEnabled) {
               const logData = {
@@ -326,7 +327,7 @@ export class RabbitmqController extends EventController implements EventControll
 
           await this.amqpChannel.bindQueue(queueName, exchangeName, event);
 
-          await publishConfirmed(this.amqpChannel, exchangeName, event, Buffer.from(JSON.stringify(message)));
+          await publishConfirmed(this.amqpChannel, exchangeName, event, Buffer.from(JSON.stringify(message)), eventId);
 
           if (logEnabled) {
             const logData = {
